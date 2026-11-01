@@ -13,6 +13,7 @@ const Recaptcha: React.FC<{
 
   useEffect(() => {
     if (!containerRef.current) return;
+    if (!RECAPTCHA_SITE_KEY) return;
 
     let cancelled = false;
     const tryRender = () => {
@@ -22,7 +23,7 @@ const Recaptcha: React.FC<{
         return;
       }
       widgetIdRef.current = window.grecaptcha.render(containerRef.current, {
-        sitekey: RECAPTCHA_SITE_KEY || '',
+        sitekey: RECAPTCHA_SITE_KEY,
         callback: (token) => onChange(token),
         'expired-callback': () => onChange(null),
       });
@@ -137,7 +138,7 @@ const ContactForm: React.FC<ContactFormProps> = ({ mode = 'single' }) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!captchaToken) {
+    if (RECAPTCHA_SITE_KEY && !captchaToken) {
       setStatus('error');
       setErrorMsg('Please complete the reCAPTCHA verification.');
       return;
@@ -555,7 +556,7 @@ const ContactForm: React.FC<ContactFormProps> = ({ mode = 'single' }) => {
         {/* Submit Button */}
         <button
           type="submit"
-          disabled={status === 'loading' || !captchaToken}
+          disabled={status === 'loading' || (!!RECAPTCHA_SITE_KEY && !captchaToken)}
           className="w-full bg-luxury-gold text-deep-olive font-bold py-4 uppercase tracking-widest shadow-lg hover:brightness-110 transition disabled:opacity-60"
         >
           {status === 'loading' ? 'Sending…' : 'Request Free Case Review'}
@@ -892,7 +893,7 @@ const ContactForm: React.FC<ContactFormProps> = ({ mode = 'single' }) => {
               </button>
               <button
                 type="submit"
-                disabled={status === 'loading' || !captchaToken}
+                disabled={status === 'loading' || (!!RECAPTCHA_SITE_KEY && !captchaToken)}
                 className="bg-deep-olive text-white px-6 py-3 rounded-full hover:shadow-xl transition w-full sm:w-auto disabled:opacity-60"
               >
                 {status === 'loading' ? 'Sending…' : 'Submit Pre-Consultation Questionnaire'}

@@ -33,26 +33,28 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     captchaToken,
   } = req.body;
 
-  if (!captchaToken) {
-    return res.status(400).json({ error: 'reCAPTCHA verification is required.' });
-  }
-
-  try {
-    const verifyRes = await fetch('https://www.google.com/recaptcha/api/siteverify', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({
-        secret: process.env.RECAPTCHA_SECRET_KEY || '',
-        response: captchaToken,
-      }),
-    });
-    const verifyData = await verifyRes.json();
-    if (!verifyData.success) {
-      return res.status(400).json({ error: 'reCAPTCHA verification failed. Please try again.' });
+  if (process.env.RECAPTCHA_SECRET_KEY) {
+    if (!captchaToken) {
+      return res.status(400).json({ error: 'reCAPTCHA verification is required.' });
     }
-  } catch (err) {
-    console.error('reCAPTCHA verification error:', err);
-    return res.status(500).json({ error: 'Failed to verify reCAPTCHA. Please try again.' });
+
+    try {
+      const verifyRes = await fetch('https://www.google.com/recaptcha/api/siteverify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          secret: process.env.RECAPTCHA_SECRET_KEY,
+          response: captchaToken,
+        }),
+      });
+      const verifyData = await verifyRes.json();
+      if (!verifyData.success) {
+        return res.status(400).json({ error: 'reCAPTCHA verification failed. Please try again.' });
+      }
+    } catch (err) {
+      console.error('reCAPTCHA verification error:', err);
+      return res.status(500).json({ error: 'Failed to verify reCAPTCHA. Please try again.' });
+    }
   }
 
   if (!firstName || !lastName || !email) {
